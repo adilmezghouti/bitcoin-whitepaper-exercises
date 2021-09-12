@@ -27,7 +27,6 @@ Blockchain.blocks.push({
 	timestamp: Date.now(),
 });
 
-// TODO: insert each line into blockchain
 for (let line of poem) {
 	const len = Blockchain.blocks.length;
 	const prevBlock = Blockchain.blocks[len - 1];
@@ -42,10 +41,7 @@ for (let line of poem) {
 		...currentBlock,
 		hash: blockHash(JSON.stringify(currentBlock)),
 	});
-
-	console.log(Blockchain.blocks[len]);
 }
-
 console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
 
 
@@ -56,10 +52,32 @@ function blockHash(bl) {
 	).digest("hex");
 }
 
-function verifyChain(blockchain) {
-	for (let i = blockchain.blocks.length - 1; i > 0; --i) {
-		if (blockchain.blocks[i].prevHash !== blockchain.blocks[i - 1].hash) return false;
+function verifyBlock(block) {
+	if (typeof block.index === 'undefined') return false;
+
+	if (block.index === 0) {
+		return block.hash === '000000' && block.data === ''
+	} else {
+		if (typeof block.timestamp !== 'number') return false
+		if (typeof block.data !== 'string') return false
+		if (block.hash === blockHash(JSON.stringify(block))) return false
 	}
 
+	return true;
+}
+
+function verifyChain(blockchain) {
+	const len = blockchain.blocks.length
+	const blocks = blockchain.blocks
+
+	for (let i = len - 1; i > 0; i--) {
+		if (
+			blocks[i].prevHash !== blocks[i - 1].hash ||
+			!verifyBlock(blocks[i])
+		)
+			return false;
+	}
+
+	if (!verifyBlock(blocks[0])) return false
 	return true;
 }
